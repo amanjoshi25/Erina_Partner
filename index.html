@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Erina Assistance — Unified Gateway Login</title>
+  <!-- Outfit and Inter Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Outfit', 'Inter', 'sans-serif'],
+          },
+          colors: {
+            brandDark: '#020617',
+            brandCard: '#0b1329',
+            brandTeal: '#14b8a6',
+            brandBlue: '#3b82f6',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Glassmorphism Panel */
+    .glass-panel {
+      background: rgba(11, 19, 41, 0.7);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    }
+    /* Animated Gradient Text */
+    .gradient-text {
+      background: linear-gradient(135deg, #60a5fa 0%, #818cf8 50%, #c084fc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-size: 200% 200%;
+      animation: gradient-move 8s ease infinite;
+    }
+    @keyframes gradient-move {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    /* Glow effect button */
+    .glow-button {
+      position: relative;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .glow-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px 0 rgba(99, 102, 241, 0.4);
+    }
+    /* Role Card hover */
+    .role-card {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .role-card:hover {
+      transform: translateY(-6px);
+      border-color: rgba(99, 102, 241, 0.3);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(99, 102, 241, 0.1);
+    }
+    .role-card-teal:hover {
+      border-color: rgba(20, 184, 166, 0.3);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(20, 184, 166, 0.1);
+    }
+  </style>
+</head>
+<body class="bg-brandDark text-slate-100 min-h-screen flex flex-col justify-between selection:bg-blue-500/30 selection:text-blue-200 overflow-x-hidden">
+  
+  <!-- Blur Background Orbs -->
+  <div class="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
+  <div class="absolute bottom-10 right-1/4 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+  <!-- Header -->
+  <header class="py-6 px-12 border-b border-white/5 flex justify-between items-center glass-panel sticky top-0 z-50">
+    <div class="flex items-center gap-3">
+      <div class="p-2 bg-blue-600/20 border border-blue-500/30 rounded-xl">
+        <i data-lucide="shield" class="w-6 h-6 text-blue-400"></i>
+      </div>
+      <div>
+        <span class="text-xl font-bold tracking-tight text-white">
+          ERINA<span class="text-blue-400 font-light">.assistance</span>
+        </span>
+      </div>
+    </div>
+    <div class="text-xs text-slate-400 flex items-center gap-2">
+      <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+      Unified Gateway Services
+    </div>
+  </header>
+
+  <!-- Main Gateway Area -->
+  <main class="max-w-6xl w-full mx-auto px-6 py-12 flex flex-col items-center justify-center gap-12">
+    
+    <div class="text-center flex flex-col items-center max-w-2xl gap-3">
+      <span class="px-3 py-1 text-xs font-semibold bg-blue-500/10 border border-blue-500/20 text-blue-400 rounded-full">
+        Portal Dashboard Gateway
+      </span>
+      <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight text-white mt-2">
+        Select Your <span class="gradient-text">Assistance Role</span>
+      </h1>
+      <p class="text-slate-400 text-sm md:text-base leading-relaxed">
+        Access the Erina Assistance driver onboarding ledger, fleet console, partner networks, or manage operations dispatch.
+      </p>
+    </div>
+
+    <!-- Cards Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full mt-4">
+      
+      <!-- Admin Card -->
+      <a href="http://localhost:3001" target="_blank" class="role-card glass-panel p-8 rounded-3xl flex flex-col justify-between h-72 cursor-pointer group">
+        <div>
+          <div class="w-12 h-12 bg-blue-500/10 rounded-2xl flex items-center justify-center border border-blue-500/20 mb-6">
+            <i data-lucide="shield-check" class="w-6 h-6 text-blue-400"></i>
+          </div>
+          <h3 class="text-xl font-bold text-white mb-2 group-hover:text-blue-300 transition-colors">
+            Operations Admin
+          </h3>
+          <p class="text-slate-400 text-xs leading-relaxed">
+            Verify driver KYC SMARTCARDs, DLs, approve pricing parameters, and monitor live RSA jobs dispatch log.
+          </p>
+        </div>
+        <div class="flex items-center gap-2 text-xs font-semibold text-blue-400 mt-6">
+          <span>Go to Admin Portal (Port 3001)</span>
+          <i data-lucide="arrow-right" class="w-4 h-4 transform group-hover:translate-x-1 transition-transform"></i>
+        </div>
+      </a>
+
+      <!-- Fleet Card -->
+      <a href="http://localhost:3002" target="_blank" class="role-card role-card-teal glass-panel p-8 rounded-3xl flex flex-col justify-between h-72 cursor-pointer group">
+        <div>
+          <div class="w-12 h-12 bg-teal-500/10 rounded-2xl flex items-center justify-center border border-teal-500/20 mb-6">
+            <i data-lucide="truck" class="w-6 h-6 text-teal-400"></i>
+          </div>
+          <h3 class="text-xl font-bold text-white mb-2 group-hover:text-teal-300 transition-colors">
+            Fleet Owner / Operator
+          </h3>
+          <p class="text-slate-400 text-xs leading-relaxed">
+            Manage commercial vehicle portfolios, link active driver subscriptions, check downtime logs, and track live breakdowns.
+          </p>
+        </div>
+        <div class="flex items-center gap-2 text-xs font-semibold text-teal-400 mt-6">
+          <span>Go to Fleet Portal (Port 3002)</span>
+          <i data-lucide="arrow-right" class="w-4 h-4 transform group-hover:translate-x-1 transition-transform"></i>
+        </div>
+      </a>
+
+      <!-- Driver Mobile App Card -->
+      <div class="role-card glass-panel p-8 rounded-3xl flex flex-col justify-between h-72 group">
+        <div>
+          <div class="w-12 h-12 bg-indigo-500/10 rounded-2xl flex items-center justify-center border border-indigo-500/20 mb-6">
+            <i data-lucide="smartphone" class="w-6 h-6 text-indigo-400"></i>
+          </div>
+          <h3 class="text-xl font-bold text-white mb-2">
+            Commercial Driver App
+          </h3>
+          <p class="text-slate-400 text-xs leading-relaxed">
+            Purchase roadside packages, request emergency help (SOS), and upload smart compliance documentation.
+          </p>
+        </div>
+        <div class="flex items-center justify-between mt-6">
+          <span class="text-[10px] text-slate-500 font-mono">APP ID: com.erina.driver</span>
+          <span class="px-2.5 py-1 text-[10px] font-semibold bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 rounded-full">
+            Running on Emulator
+          </span>
+        </div>
+      </div>
+
+      <!-- Partner Card -->
+      <div class="role-card role-card-teal glass-panel p-8 rounded-3xl flex flex-col justify-between h-72 group">
+        <div>
+          <div class="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center border border-emerald-500/20 mb-6">
+            <i data-lucide="users" class="w-6 h-6 text-emerald-400"></i>
+          </div>
+          <h3 class="text-xl font-bold text-white mb-2">
+            Partner Referral App
+          </h3>
+          <p class="text-slate-400 text-xs leading-relaxed">
+            Onboard commercial drivers to the Erina assistance subscriptions platform, track sales pipelines, and withdraw earnings.
+          </p>
+        </div>
+        <div class="flex items-center justify-between mt-6">
+          <span class="text-[10px] text-slate-500 font-mono">APP ID: com.erina.partner</span>
+          <span class="px-2.5 py-1 text-[10px] font-semibold bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-full">
+            Flutter Ready
+          </span>
+        </div>
+      </div>
+
+      <!-- Technician App -->
+      <div class="role-card glass-panel p-8 rounded-3xl flex flex-col justify-between h-72 group">
+        <div>
+          <div class="w-12 h-12 bg-rose-500/10 rounded-2xl flex items-center justify-center border border-rose-500/20 mb-6">
+            <i data-lucide="wrench" class="w-6 h-6 text-rose-400"></i>
+          </div>
+          <h3 class="text-xl font-bold text-white mb-2">
+            Technician Service App
+          </h3>
+          <p class="text-slate-400 text-xs leading-relaxed">
+            Accept roadside repair tasks, receive turn-by-turn navigation, collect digital signatures, and manage cash collection log.
+          </p>
+        </div>
+        <div class="flex items-center justify-between mt-6">
+          <span class="text-[10px] text-slate-500 font-mono">APP ID: com.erina.technician</span>
+          <span class="px-2.5 py-1 text-[10px] font-semibold bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-full">
+            Legacy App (External)
+          </span>
+        </div>
+      </div>
+
+      <!-- Database Control Panel -->
+      <a href="http://localhost:5050" target="_blank" class="role-card role-card-teal glass-panel p-8 rounded-3xl flex flex-col justify-between h-72 cursor-pointer group">
+        <div>
+          <div class="w-12 h-12 bg-amber-500/10 rounded-2xl flex items-center justify-center border border-amber-500/20 mb-6">
+            <i data-lucide="database" class="w-6 h-6 text-amber-400"></i>
+          </div>
+          <h3 class="text-xl font-bold text-white mb-2 group-hover:text-amber-300 transition-colors">
+            PostgreSQL pgAdmin
+          </h3>
+          <p class="text-slate-400 text-xs leading-relaxed">
+            Manage core tables, verify user records in `erina_db` schemas, and directly audit payment log transactions.
+          </p>
+        </div>
+        <div class="flex items-center gap-2 text-xs font-semibold text-amber-400 mt-6">
+          <span>Go to Database UI (Port 5050)</span>
+          <i data-lucide="arrow-right" class="w-4 h-4 transform group-hover:translate-x-1 transition-transform"></i>
+        </div>
+      </a>
+
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="py-6 border-t border-white/5 text-center text-xs text-slate-500 glass-panel">
+    <p>&copy; 2026 Erina Assistance Platform. All rights reserved.</p>
+  </footer>
+
+  <script>
+    lucide.createIcons();
+  </script>
+</body>
+</html>
