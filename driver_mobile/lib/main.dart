@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/auth_provider.dart';
+import 'providers/driver_provider.dart';
 import 'screens/login_screen.dart';
 import 'screens/profile_setup_screen.dart';
 import 'screens/kyc_status_screen.dart';
+import 'screens/tabs/vehicles_tab.dart';
+import 'screens/tabs/sub_tab.dart';
+import 'screens/tabs/profile_tab.dart';
+import 'screens/rsa_tracking_screen.dart';
 
 void main() {
   runApp(const ErinaDriverApp());
@@ -17,6 +22,7 @@ class ErinaDriverApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => DriverProvider()),
       ],
       child: MaterialApp(
         title: 'Erina Driver',
@@ -99,6 +105,16 @@ class DriverDashboardScreen extends StatefulWidget {
 
 class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
   int _selectedIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      if (mounted) {
+        Provider.of<DriverProvider>(context, listen: false).loadAllData();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -188,29 +204,123 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
   }
 
   Widget _buildBody() {
-    if (_selectedIndex == 0) {
-      return const HomeTab();
+    switch (_selectedIndex) {
+      case 0:
+        return const HomeTab();
+      case 1:
+        return const VehiclesTab();
+      case 2:
+        return const SubTab();
+      case 3:
+        return const ProfileTab();
+      default:
+        return const HomeTab();
     }
-    return Center(
-      child: Text(
-        'Tab ${_selectedIndex + 1} Content Under Construction',
-        style: const TextStyle(color: Colors.grey),
-      ),
-    );
   }
 }
 
 class HomeTab extends StatelessWidget {
   const HomeTab({super.key});
 
+  void _showSOSIssueSelector(BuildContext context, DriverProvider provider) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF0B1329),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Text(
+                  'Select Breakdown Issue',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white),
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Choose the primary issue to dispatch the correct technician specialist.',
+                  style: TextStyle(color: Colors.grey, fontSize: 11),
+                ),
+                const SizedBox(height: 20),
+                _buildIssueTile(context, provider, "Flat Tyre", Icons.tire_repair_outlined),
+                const SizedBox(height: 10),
+                _buildIssueTile(context, provider, "Dead Battery / Jumpstart", Icons.battery_charging_full_outlined),
+                const SizedBox(height: 10),
+                _buildIssueTile(context, provider, "Towing Service Required", Icons.local_shipping_outlined),
+                const SizedBox(height: 10),
+                _buildIssueTile(context, provider, "Mechanical Breakdown", Icons.build_outlined),
+                const SizedBox(height: 16),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildIssueTile(BuildContext context, DriverProvider provider, String title, IconData icon) {
+    return ListTile(
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: const Color(0xFF3B82F6).withOpacity(0.12),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Icon(icon, color: const Color(0xFF3B82F6), size: 20),
+      ),
+      title: Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white)),
+      trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+      shape: RoundedRectangleBorder(
+        side: BorderSide(color: Colors.white.withOpacity(0.04)),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      tileColor: const Color(0xFF020617),
+      onTap: () async {
+        Navigator.pop(context); // close sheet
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Locating nearest technician...'),
+            backgroundColor: Color(0xFF3B82F6),
+          ),
+        );
+
+        // Raise request (simulated location coordinates in Bengaluru)
+        final success = await provider.raiseSOS(
+          issueType: title,
+          latitude: 12.9716,
+          longitude: 77.5946,
+          locationName: "HSR Layout, Bengaluru",
+        );
+
+        if (success && context.mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const RsaTrackingScreen()),
+          );
+        }
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
+    final driverProvider = Provider.of<DriverProvider>(context);
+
     final profile = authProvider.driverProfile;
     final String driverName = profile != null
         ? (profile['full_name'] ?? 'Driver').toString()
         : "Driver";
     final String kycStatusLabel = profile != null ? profile['verification_status'].toString().toUpperCase() : "PENDING";
+    
+    final activeVehicle = driverProvider.activeVehicle;
+    final String activeVehicleReg = activeVehicle != null ? activeVehicle["registration_number"] : "No Active Vehicle";
+    final activeRsa = driverProvider.activeRsaRequest;
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -278,21 +388,21 @@ class HomeTab extends StatelessWidget {
               const SizedBox(height: 20),
               Divider(color: Colors.white.withOpacity(0.08)),
               const SizedBox(height: 10),
-              const Row(
+              Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('ACTIVE VEHICLE', style: TextStyle(color: Colors.grey, fontSize: 10)),
-                      SizedBox(height: 4),
+                      const Text('ACTIVE VEHICLE', style: TextStyle(color: Colors.grey, fontSize: 10)),
+                      const SizedBox(height: 4),
                       Text(
-                        'KA-51-MJ-2810',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                        activeVehicleReg,
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                       ),
                     ],
                   ),
-                  Column(
+                  const Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text('PLAN EXPIRY', style: TextStyle(color: Colors.grey, fontSize: 10)),
@@ -310,9 +420,57 @@ class HomeTab extends StatelessWidget {
         ),
         const SizedBox(height: 20),
 
+        // Live active RSA card (if raised)
+        if (activeRsa != null) ...[
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFEF4444).withOpacity(0.08),
+              border: Border.all(color: const Color(0xFFEF4444).withOpacity(0.25)),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'ACTIVE INCIDENT SOS',
+                        style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold, fontSize: 10),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Issue: ${activeRsa["issue_type"]}',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                      ),
+                    ],
+                  ),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFEF4444),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  child: const Text('TRACK RESOLVER', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const RsaTrackingScreen()),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+        ],
+
         // Urgent SOS dispatch button
         ElevatedButton(
-          onPressed: () => _showSOSDialog(context),
+          onPressed: () => _showSOSIssueSelector(context, driverProvider),
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFFEF4444),
             foregroundColor: Colors.white,
@@ -364,7 +522,7 @@ class HomeTab extends StatelessWidget {
             _buildQuickActionCard(
               icon: Icons.wallet_membership,
               title: 'Sub Details',
-              subtitle: 'Active Gold Plan',
+              subtitle: 'Active plans',
               color: Colors.green,
             ),
             _buildQuickActionCard(
@@ -426,49 +584,6 @@ class HomeTab extends StatelessWidget {
           )
         ],
       ),
-    );
-  }
-
-  void _showSOSDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: const Color(0xFF0B1329),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-          title: const Row(
-            children: [
-              Icon(Icons.warning, color: Color(0xFFEF4444)),
-              SizedBox(width: 10),
-              Text('Confirm RSA Request'),
-            ],
-          ),
-          content: const Text(
-            'This will dispatch the nearest technician to your current GPS coordinates. Are you sure you want to proceed?',
-          ),
-          actions: [
-            TextButton(
-              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFEF4444)),
-              child: const Text('Request Dispatch', style: TextStyle(color: Colors.white)),
-              onPressed: () {
-                Navigator.of(context).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('RSA Request Dispatched! Tracking technician...'),
-                    backgroundColor: Color(0xFFEF4444),
-                  ),
-                );
-              },
-            ),
-          ],
-        );
-      },
     );
   }
 }
