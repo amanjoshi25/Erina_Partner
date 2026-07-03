@@ -28,6 +28,7 @@ class LoginRequest(BaseModel):
 class OTPVerifyRequest(BaseModel):
     mobile_number: str = Field(...)
     otp: str = Field(..., description="6-digit verification code")
+    role: Optional[str] = None
     device_info: Optional[str] = None
     ip_address: Optional[str] = None
 

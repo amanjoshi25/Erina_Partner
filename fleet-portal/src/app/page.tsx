@@ -1,4 +1,6 @@
-import React from "react";
+"use client";
+
+import React, { useState, useEffect } from "react";
 import { 
   Shield, 
   Users, 
@@ -12,10 +14,27 @@ import {
   Truck,
   PlusCircle,
   FileText,
-  Sparkles
+  Sparkles,
+  Unlock
 } from "lucide-react";
 
 export default function Home() {
+  const [token, setToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const urlToken = params.get("token");
+      if (urlToken) {
+        setToken(urlToken);
+        localStorage.setItem("fleet_token", urlToken);
+      } else {
+        const localToken = localStorage.getItem("fleet_token");
+        if (localToken) setToken(localToken);
+      }
+    }
+  }, []);
+
   return (
     <div className="flex flex-col min-h-screen bg-[#011512] text-teal-50 font-sans selection:bg-teal-500/30 selection:text-teal-200">
       
@@ -57,6 +76,29 @@ export default function Home() {
       {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-6 py-10 md:px-12 flex flex-col gap-10">
         
+        {token && (
+          <div className="flex items-center justify-between p-4 bg-teal-500/10 border border-teal-500/25 text-teal-400 rounded-2xl text-xs gap-3 animate-fade-in">
+            <div className="flex items-center gap-2.5">
+              <div className="p-1.5 bg-teal-500/10 rounded-lg">
+                <Unlock className="w-4 h-4 text-teal-400 shrink-0" />
+              </div>
+              <div>
+                <span className="font-bold uppercase tracking-wider block text-[10px]">Single-Sign-On Verified</span>
+                <span className="text-teal-300 font-mono text-[10px] truncate max-w-md block mt-0.5">Session Token: {token}</span>
+              </div>
+            </div>
+            <button 
+              onClick={() => {
+                localStorage.removeItem("fleet_token");
+                window.location.href = "http://localhost:3000/login";
+              }}
+              className="px-3 py-1.5 bg-[#012620] hover:bg-[#011a16] border border-white/5 text-slate-300 font-semibold rounded-lg hover:text-red-400 transition-colors cursor-pointer"
+            >
+              Sign out
+            </button>
+          </div>
+        )}
+
         {/* Title and Intro */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>

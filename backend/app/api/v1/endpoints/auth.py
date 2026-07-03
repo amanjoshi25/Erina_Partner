@@ -78,9 +78,17 @@ def verify_otp(payload: OTPVerifyRequest, db: Session = Depends(get_db)):
     # Get or create User
     user = db.query(User).filter(User.mobile_number == mobile).first()
     if not user:
+        # Determine the user's role: default to payload.role or "Driver"
+        user_role = payload.role if payload.role else "Driver"
+        # Map frontend role selection if needed (e.g. "fleet" -> "Fleet Owner")
+        if user_role.lower() == "fleet":
+            user_role = "Fleet Owner"
+        elif user_role.lower() == "admin":
+            user_role = "Admin"
+            
         user = User(
             mobile_number=mobile,
-            role="Driver",
+            role=user_role,
             status="Active",
             is_active=True
         )
@@ -93,22 +101,57 @@ def verify_otp(payload: OTPVerifyRequest, db: Session = Depends(get_db)):
         otp_record.user_id = user.id
         db.commit()
         
-    # Ensure driver profile exists
-    driver = db.query(Driver).filter(Driver.user_id == user.id).first()
-    if not driver:
-        # Generate a simple driver code DRV-YYYY-XXXX
-        drv_suffix = str(uuid.uuid4().int)[:6]
-        driver_code = f"DRV-{datetime.datetime.now().year}-{drv_suffix}"
-        
-        driver = Driver(
-            user_id=user.id,
-            driver_code=driver_code,
-            status="Active",
-            verification_status="pending"
-        )
-        db.add(driver)
-        db.commit()
-        db.refresh(driver)
+    # Conditionally check/create role profiles
+    is_profile_complete = False
+    is_kyc_verified = False
+    
+    if user.role == "Driver":
+        driver = db.query(Driver).filter(Driver.user_id == user.id).first()
+        if not driver:
+            drv_suffix = str(uuid.uuid4().int)[:6]
+            driver_code = f"DRV-{datetime.datetime.now().year}-{drv_suffix}"
+            driver = Driver(
+                user_id=user.id,
+                driver_code=driver_code,
+                status="Active",
+                verification_status="pending"
+            )
+            db.add(driver)
+            db.commit()
+            db.refresh(driver)
+        is_profile_complete = bool(driver.full_name and driver.dob and driver.sex)
+        is_kyc_verified = (driver.verification_status == "verified")
+    elif user.role == "Partner":
+        from app.models.partner import Partner
+        partner = db.query(Partner).filter(Partner.user_id == user.id).first()
+        if not partner:
+            partner_code = f"PRT-{datetime.datetime.now().year}-{str(uuid.uuid4().int)[:6]}"
+            partner = Partner(
+                user_id=user.id,
+                partner_code=partner_code,
+                status="Active",
+                commission_percentage=10.00
+            )
+            db.add(partner)
+            db.commit()
+        is_profile_complete = True
+        is_kyc_verified = True
+    elif user.role == "Fleet Owner":
+        from app.models.fleet import Fleet
+        fleet = db.query(Fleet).filter(Fleet.user_id == user.id).first()
+        if not fleet:
+            fleet = Fleet(
+                user_id=user.id,
+                name="New Fleet Company",
+                status="Active"
+            )
+            db.add(fleet)
+            db.commit()
+        is_profile_complete = True
+        is_kyc_verified = True
+    else:
+        is_profile_complete = True
+        is_kyc_verified = True
         
     # Generate tokens
     access_token = security.create_access_token(subject=user.id)
@@ -130,9 +173,6 @@ def verify_otp(payload: OTPVerifyRequest, db: Session = Depends(get_db)):
     # Update last login time
     user.last_login = datetime.datetime.utcnow()
     db.commit()
-    
-    is_profile_complete = bool(driver.full_name and driver.dob and driver.sex)
-    is_kyc_verified = (driver.verification_status == "verified")
     
     return {
         "access_token": access_token,
