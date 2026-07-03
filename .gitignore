@@ -29,3 +29,9 @@ Thumbs.db
 .env.development.local
 .env.test.local
 .env.production.local
+
+# Local SQLite databases and uploads
+backend/*.sqlite
+backend/erina_db.sqlite
+backend/static/uploads/*
+!backend/static/uploads/.gitkeep

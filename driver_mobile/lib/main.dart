@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'providers/auth_provider.dart';
+import 'screens/login_screen.dart';
+import 'screens/profile_setup_screen.dart';
+import 'screens/kyc_status_screen.dart';
 
 void main() {
   runApp(const ErinaDriverApp());
@@ -9,30 +14,79 @@ class ErinaDriverApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Erina Driver',
-      debugShowCheckedModeBanner: false,
-      themeMode: ThemeMode.dark,
-      darkTheme: ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.dark,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF3B82F6),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+      ],
+      child: MaterialApp(
+        title: 'Erina Driver',
+        debugShowCheckedModeBanner: false,
+        themeMode: ThemeMode.dark,
+        darkTheme: ThemeData(
+          useMaterial3: true,
           brightness: Brightness.dark,
-          surface: const Color(0xFF0B1329),
-          primary: const Color(0xFF3B82F6),
-          secondary: const Color(0xFF10B981),
-          error: const Color(0xFFEF4444),
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: const Color(0xFF3B82F6),
+            brightness: Brightness.dark,
+            surface: const Color(0xFF0B1329),
+            primary: const Color(0xFF3B82F6),
+            secondary: const Color(0xFF10B981),
+            error: const Color(0xFFEF4444),
+          ),
+          scaffoldBackgroundColor: const Color(0xFF020617),
+          cardTheme: const CardTheme(
+            color: Color(0xFF0B1329),
+            elevation: 0,
+            margin: EdgeInsets.zero,
+          ),
         ),
-        scaffoldBackgroundColor: const Color(0xFF020617),
-        cardTheme: const CardTheme(
-          color: Color(0xFF0B1329),
-          elevation: 0,
-          margin: EdgeInsets.zero,
-        ),
+        home: const AuthWrapper(),
       ),
-      home: const DriverDashboardScreen(),
     );
+  }
+}
+
+class AuthWrapper extends StatefulWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  State<AuthWrapper> createState() => _AuthWrapperState();
+}
+
+class _AuthWrapperState extends State<AuthWrapper> {
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      if (mounted) {
+        Provider.of<AuthProvider>(context, listen: false).tryAutoLogin();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
+
+    switch (authProvider.state) {
+      case AuthState.uninitialized:
+        return const Scaffold(
+          body: Center(
+            child: CircularProgressIndicator(color: Color(0xFF3B82F6)),
+          ),
+        );
+      case AuthState.unauthenticated:
+      case AuthState.authenticating:
+      case AuthState.otpSent:
+        return const LoginScreen();
+      case AuthState.profileIncomplete:
+        return const ProfileSetupScreen();
+      case AuthState.kycIncomplete:
+      case AuthState.kycPendingReview:
+        return const KycStatusScreen();
+      case AuthState.authenticated:
+        return const DriverDashboardScreen();
+    }
   }
 }
 
@@ -48,6 +102,8 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
+    
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color(0xFF0B1329),
@@ -86,6 +142,11 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
           IconButton(
             icon: const Icon(Icons.notifications_outlined),
             onPressed: () {},
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.redAccent),
+            tooltip: 'Logout',
+            onPressed: () => authProvider.logout(),
           ),
           const SizedBox(width: 8),
         ],
@@ -144,6 +205,13 @@ class HomeTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
+    final profile = authProvider.driverProfile;
+    final String driverName = profile != null
+        ? (profile['full_name'] ?? 'Driver').toString()
+        : "Driver";
+    final String kycStatusLabel = profile != null ? profile['verification_status'].toString().toUpperCase() : "PENDING";
+
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -165,17 +233,17 @@ class HomeTab extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Column(
+                  Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      const Text(
                         'Welcome Back,',
                         style: TextStyle(color: Colors.grey, fontSize: 14),
                       ),
-                      SizedBox(height: 4),
+                      const SizedBox(height: 4),
                       Text(
-                        'Ramesh Kumar',
-                        style: TextStyle(
+                        driverName.isNotEmpty ? driverName : 'Driver Profile',
+                        style: const TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
@@ -190,13 +258,13 @@ class HomeTab extends StatelessWidget {
                       border: Border.all(color: const Color(0xFF10B981).withOpacity(0.3)),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Row(
+                    child: Row(
                       children: [
-                        Icon(Icons.check_circle, color: Color(0xFF10B981), size: 14),
-                        SizedBox(width: 6),
+                        const Icon(Icons.check_circle, color: Color(0xFF10B981), size: 14),
+                        const SizedBox(width: 6),
                         Text(
-                          'KYC Verified',
-                          style: TextStyle(
+                          'KYC $kycStatusLabel',
+                          style: const TextStyle(
                             color: Color(0xFF10B981),
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
