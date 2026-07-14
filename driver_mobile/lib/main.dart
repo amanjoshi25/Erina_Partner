@@ -40,7 +40,7 @@ class ErinaDriverApp extends StatelessWidget {
             error: const Color(0xFFEF4444),
           ),
           scaffoldBackgroundColor: const Color(0xFF020617),
-          cardTheme: const CardTheme(
+          cardTheme: const CardThemeData(
             color: Color(0xFF0B1329),
             elevation: 0,
             margin: EdgeInsets.zero,
