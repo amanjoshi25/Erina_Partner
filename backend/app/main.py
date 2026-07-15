@@ -7,7 +7,7 @@ from app.db.session import engine, Base
 from app.api.v1.api import api_router
 
 # Import all SQLAlchemy models to register them on Base before create_all
-from app.models.user import User, OTPVerification, UserSession
+from app.models.user import User, OTPVerification, UserSession, UserConsent
 from app.models.driver import Driver, DriverAddress, DriverDocument, KYCRequest
 from app.models.vehicle import Vehicle
 from app.models.subscription import SubscriptionPlan, Subscription
