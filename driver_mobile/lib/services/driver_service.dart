@@ -41,6 +41,9 @@ class DriverService {
     required String dob, // YYYY-MM-DD
     required String sex,
     required String emergencyContactNo,
+    String? email,
+    String? emergencyContactName,
+    String? emergencyContactRelation,
   }) async {
     try {
       final headers = await _getHeaders();
@@ -52,6 +55,9 @@ class DriverService {
           "dob": dob,
           "sex": sex,
           "emergency_contact_no": emergencyContactNo,
+          "email": email,
+          "emergency_contact_name": emergencyContactName,
+          "emergency_contact_relation": emergencyContactRelation,
         }),
       );
 

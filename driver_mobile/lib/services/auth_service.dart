@@ -43,7 +43,9 @@ class AuthService {
   Future<Map<String, dynamic>> verifyOtp({
     required String mobileNumber,
     required String otp,
+    String? role,
     String? deviceInfo,
+    String? platform,
   }) async {
     try {
       final response = await http.post(
@@ -52,7 +54,9 @@ class AuthService {
         body: jsonEncode({
           "mobile_number": mobileNumber,
           "otp": otp,
+          "role": role ?? "Driver",
           "device_info": deviceInfo ?? "Flutter Mobile Client",
+          "platform": platform ?? "android",
         }),
       );
 
@@ -63,9 +67,13 @@ class AuthService {
         
         return {
           "success": true,
+          "data": data,  // full token response including onboarding state
           "role": data["role"],
           "is_profile_complete": data["is_profile_complete"],
           "is_kyc_verified": data["is_kyc_verified"],
+          "terms_accepted": data["terms_accepted"],
+          "onboarding_step": data["onboarding_step"],
+          "preferred_language": data["preferred_language"],
         };
       } else {
         return {
@@ -101,8 +109,12 @@ class AuthService {
         await _storage.write(key: _keyRefreshToken, value: data["refresh_token"]);
         return {
           "success": true,
+          "data": data,  // full token response
           "is_profile_complete": data["is_profile_complete"],
           "is_kyc_verified": data["is_kyc_verified"],
+          "terms_accepted": data["terms_accepted"],
+          "onboarding_step": data["onboarding_step"],
+          "preferred_language": data["preferred_language"],
         };
       } else {
         await logout();

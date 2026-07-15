@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'core/design_system.dart';
 import 'providers/auth_provider.dart';
 import 'providers/driver_provider.dart';
+import 'screens/splash_screen.dart';
+import 'screens/language_screen.dart';
+import 'screens/role_selection_screen.dart';
 import 'screens/login_screen.dart';
+import 'screens/terms_screen.dart';
 import 'screens/profile_setup_screen.dart';
 import 'screens/kyc_status_screen.dart';
 import 'screens/tabs/vehicles_tab.dart';
@@ -28,24 +34,7 @@ class ErinaDriverApp extends StatelessWidget {
         title: 'Erina Driver',
         debugShowCheckedModeBanner: false,
         themeMode: ThemeMode.dark,
-        darkTheme: ThemeData(
-          useMaterial3: true,
-          brightness: Brightness.dark,
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFF3B82F6),
-            brightness: Brightness.dark,
-            surface: const Color(0xFF0B1329),
-            primary: const Color(0xFF3B82F6),
-            secondary: const Color(0xFF10B981),
-            error: const Color(0xFFEF4444),
-          ),
-          scaffoldBackgroundColor: const Color(0xFF020617),
-          cardTheme: const CardThemeData(
-            color: Color(0xFF0B1329),
-            elevation: 0,
-            margin: EdgeInsets.zero,
-          ),
-        ),
+        darkTheme: ErinaTheme.dark,
         home: const AuthWrapper(),
       ),
     );
@@ -74,27 +63,43 @@ class _AuthWrapperState extends State<AuthWrapper> {
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
 
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 400),
+      switchInCurve: Curves.easeOut,
+      switchOutCurve: Curves.easeIn,
+      child: _buildScreen(authProvider),
+    );
+  }
+
+  Widget _buildScreen(AuthProvider authProvider) {
     switch (authProvider.state) {
       case AuthState.uninitialized:
-        return const Scaffold(
-          body: Center(
-            child: CircularProgressIndicator(color: Color(0xFF3B82F6)),
-          ),
+      case AuthState.splash:
+        return const SplashScreen(key: ValueKey('splash'));
+      case AuthState.languageSelection:
+        return LanguageScreen(
+          key: const ValueKey('language'),
+          onDone: () => authProvider.completeLanguageSelection(),
         );
+      case AuthState.roleSelection:
+        return const RoleSelectionScreen(key: ValueKey('role'));
       case AuthState.unauthenticated:
       case AuthState.authenticating:
       case AuthState.otpSent:
-        return const LoginScreen();
+        return const LoginScreen(key: ValueKey('login'));
+      case AuthState.termsNotAccepted:
+        return const TermsScreen(key: ValueKey('terms'));
       case AuthState.profileIncomplete:
-        return const ProfileSetupScreen();
+        return const ProfileSetupScreen(key: ValueKey('profile'));
       case AuthState.kycIncomplete:
       case AuthState.kycPendingReview:
-        return const KycStatusScreen();
+        return const DocumentWalletScreen(key: ValueKey('kyc'));
       case AuthState.authenticated:
-        return const DriverDashboardScreen();
+        return const DriverDashboardScreen(key: ValueKey('dashboard'));
     }
   }
 }
+
 
 class DriverDashboardScreen extends StatefulWidget {
   const DriverDashboardScreen({super.key});
