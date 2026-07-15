@@ -4,14 +4,12 @@ import string
 import uuid
 from typing import Any, Union, Optional
 from jose import jwt, JWTError
-from passlib.context import CryptContext
+import hashlib
+import os
 from app.core.config import settings
 
 ALGORITHM = "HS256"
 REFRESH_TOKEN_EXPIRE_DAYS = 30
-
-# Bcrypt context for hashing OTPs
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def generate_otp() -> str:
@@ -20,13 +18,22 @@ def generate_otp() -> str:
 
 
 def hash_otp(otp: str) -> str:
-    """Hash an OTP using bcrypt for secure storage."""
-    return pwd_context.hash(otp)
+    """Hash an OTP using PBKDF2-HMAC-SHA256 with a random salt."""
+    salt = os.urandom(16)
+    key = hashlib.pbkdf2_hmac('sha256', otp.encode('utf-8'), salt, 100000)
+    return f"{salt.hex()}:{key.hex()}"
 
 
 def verify_otp_hash(plain_otp: str, hashed_otp: str) -> bool:
-    """Verify a plain OTP against its bcrypt hash."""
-    return pwd_context.verify(plain_otp, hashed_otp)
+    """Verify a plain OTP against its stored hash."""
+    try:
+        salt_hex, key_hex = hashed_otp.split(":")
+        salt = bytes.fromhex(salt_hex)
+        key = bytes.fromhex(key_hex)
+        new_key = hashlib.pbkdf2_hmac('sha256', plain_otp.encode('utf-8'), salt, 100000)
+        return new_key == key
+    except Exception:
+        return False
 
 
 def create_access_token(subject: Union[str, Any], expires_delta: Optional[datetime.timedelta] = None) -> str:
